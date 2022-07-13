@@ -55,9 +55,7 @@ def poll() {
     httpGet(["uri":"https://readings.powerpal.net/api/v1/device/"+settings.DeviceID, "headers": headers]) { resp ->
         if (logEnable) log.debug resp
         if (resp.success) {
-            
-                sendEvent(name: "lastupdate", value: new Date(), isStateChange: true)
-
+            if (resp.data.last_reading_timestamp>device.currentValue("lastupdate_timestamp")) {
                 sendEvent(name: "energy", value: resp.data.last_reading_watt_hours *60, unit: "kWh", isStateChange: true)
                 sendEvent(name: "cost", value: (resp.data.last_reading_cost *60d).round(2), unit: "\$", isStateChange: true)
 
@@ -66,6 +64,7 @@ def poll() {
                 
                 sendEvent(name: "lastupdate", value: new Date((long)resp.data.last_reading_timestamp*1000L), isStateChange: true)
                 sendEvent(name: "lastupdate_timestamp", value: resp.data.last_reading_timestamp, isStateChange:true)
+            }
         } else {
             log.error "Error: ${resp}"
         }
